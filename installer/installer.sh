@@ -43,7 +43,7 @@ title="Airframes Installer ${version}"
 
 function platformSupported() {
   local platform=$(uname -s)
-  if [ "$platform" = "Linux" ]; then
+  if [ "$platform" == "Linux" ]; then
     return 0
   else
     return 1
@@ -121,7 +121,8 @@ function installManualAcarsdec() {
 
 ### Main
 
-if [ $(platformSupported) -ne 0 ]; then
+platformSupported
+if [ $? -ne 0 ]; then
   echo " "
   echo "Sorry, your platform is not supported yet."
   echo " "
