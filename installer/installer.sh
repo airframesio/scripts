@@ -41,9 +41,16 @@ title="Airframes Installer ${version}"
 
 ### Functions: Helpers
 
-function platformSupported() {
+function platform() {
   local platform=$(uname -s)
+  echo "$platform"
+}
+
+function platformSupported() {
+  local platform=$(platform)
   if [ "$platform" == "Linux" ]; then
+    return 0
+  elif [ "$platform" == "Darwin" ]; then
     return 0
   else
     return 1
