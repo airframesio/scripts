@@ -27,10 +27,10 @@
 # set -e
 
 # Enforce that this script is run as root
-if [ "$(id -u)" != "0" ]; then
-  echo "This script must be run as root. Rerun with sudo!" 1>&2
-  exit 1
-fi
+# if [ "$(id -u)" != "0" ]; then
+#   echo "This script must be run as root. Rerun with sudo!" 1>&2
+#   exit 1
+# fi
 
 ### Variables
 
@@ -55,6 +55,24 @@ function platformSupported() {
   else
     return 1
   fi
+}
+
+### Functions: Support
+
+function installPlatformDependencies() {
+  local platform=$(platform)
+  if [ "$platform" == "Linux" ]; then
+    apt-get update
+    apt-get install -y git dialog
+  elif [ "$platform" == "Darwin" ]; then
+    brew install git dialog
+  fi
+}
+
+function showPlatformNotSupported() {
+  local platform=$(platform)
+  dialog --title "$title" \
+    --msgbox "Your platform ($platform) is not supported." 10 50
 }
 
 ### Functions: Menus
@@ -130,11 +148,11 @@ function installManualAcarsdec() {
 
 platformSupported
 if [ $? -ne 0 ]; then
-  echo " "
-  echo "Sorry, your platform is not supported yet."
-  echo " "
+  showPlatformNotSupported
   exit 1
 fi
+
+installPlatformDependencies
 
 while [ $? -ne 1 ]
 do
@@ -149,7 +167,7 @@ do
     do
       case $selection in
       1)
-      installManualAcarsdec
+      sudo installManualAcarsdec
       # show error message if acarsdec fails to install
       if [ $? -ne 0 ]; then
         dialog --title "Error" --msgbox "acarsdec failed to install" 6 50
