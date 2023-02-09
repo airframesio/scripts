@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Airframes Installer
-# https://github.com/airframesio/scripts/installer/install.sh
+# https://github.com/airframesio/scripts/installer/installer.sh
 #
 # This script installs the Airframes-related decoder clients & sets up the feeds.
 #
@@ -9,18 +9,18 @@
 #
 #   Quick and easy
 #
-#   $ curl -s https://raw.githubusercontent.com/airframesio/scripts/master/installer/install.sh | sudo bash
+#   $ curl -s https://raw.githubusercontent.com/airframesio/scripts/master/installer/installer.sh | sudo bash
 #
 #   Or, if you prefer to download the script first
 #
-#   $ curl -s -o install.sh https://raw.githubusercontent.com/airframesio/scripts/master/installer/install.sh
+#   $ curl -s -o install.sh https://raw.githubusercontent.com/airframesio/scripts/master/installer/installer.sh
 #   $ sudo ./install.sh
 #
 #   Or, if you prefer to clone the repo first
 #
 #   $ git clone https://github.com/airframesio/scripts.git
 #   $ cd scripts/installer
-#   $ sudo ./install.sh
+#   $ sudo ./installer.sh
 #
 
 # Exit on error
