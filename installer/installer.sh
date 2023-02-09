@@ -168,20 +168,34 @@ do
       case $selection in
       1)
       sudo installManualAcarsdec
-      # show error message if acarsdec fails to install
       if [ $? -ne 0 ]; then
         dialog --title "Error" --msgbox "acarsdec failed to install" 6 50
       fi
-      sleep 5
+      sleep 1
       ;;
       2)
       echo "Installing dumphfdl"
+      sudo installManualDumphfdl
+      if [ $? -ne 0 ]; then
+        dialog --title "Error" --msgbox "dumphfdl failed to install" 6 50
+      fi
+      sleep 1
       ;;
       3)
       echo "Installing dumpvdl2"
+      sudo installManualDumphvdl2
+      if [ $? -ne 0 ]; then
+        dialog --title "Error" --msgbox "dumpvdl2 failed to install" 6 50
+      fi
+      sleep 1
       ;;
       4)
       echo "Installing vdlm2dec"
+      sudo installManualVdlm2dec
+      if [ $? -ne 0 ]; then
+        dialog --title "Error" --msgbox "vdlm2dec failed to install" 6 50
+      fi
+      sleep 1
       ;;
       esac
     done
