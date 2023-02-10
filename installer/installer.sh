@@ -39,7 +39,7 @@ exec 3>&1
 version="0.1.0"
 title="Airframes Installer ${version}"
 
-### Functions: Helpers
+### Functions: System
 
 function platform() {
   local platform=$(uname -s)
