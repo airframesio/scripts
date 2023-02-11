@@ -26,12 +26,6 @@
 # Exit on error
 # set -e
 
-# Enforce that this script is run as root
-# if [ "$(id -u)" != "0" ]; then
-#   echo "This script must be run as root. Rerun with sudo!" 1>&2
-#   exit 1
-# fi
-
 ### Variables
 
 exec 3>&1
@@ -40,6 +34,13 @@ version="0.1.0"
 title="Airframes Installer ${version}"
 
 ### Functions: System
+
+function ensureRoot() {
+  if [ "$(id -u)" != "0" ]; then
+    echo "This script must be run as root. Rerun with sudo!" 1>&2
+    exit 1
+  fi
+}
 
 function platform() {
   local platform=$(uname -s)
@@ -63,9 +64,9 @@ function installPlatformDependencies() {
   local platform=$(platform)
   if [ "$platform" == "Linux" ]; then
     apt-get update
-    apt-get install -y git dialog
+    apt-get install -y git dialog jq
   elif [ "$platform" == "Darwin" ]; then
-    brew install git dialog
+    brew install git dialog lsusb jq
   fi
 }
 
@@ -146,6 +147,8 @@ function installManualAcarsdec() {
 
 ### Main
 
+ensureRoot
+
 platformSupported
 if [ $? -ne 0 ]; then
   showPlatformNotSupported
@@ -208,7 +211,13 @@ do
   if [ "$result" = "3" ]; then
     echo "Installing with packages"
   fi
+  ;;
 
+  2)
+  source ./utils/detect-sdrs.sh
+  sdrs=$(detectSDRs)
+  dialog --title "Detected SDRs" --msgbox "$sdrs" 10 50
+  sleep 5
 
   esac
 done
