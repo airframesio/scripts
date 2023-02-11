@@ -28,7 +28,8 @@
 
 ### Variables
 
-AIRFRAMES_INSTALLER_PATH="/tmp/airframes-installer"
+AIRFRAMES_INSTALLER_TMP_PATH="/tmp/airframes-installer"
+AIRFRAMES_INSTALLER_PATH="${AIRFRAMES_INSTALLER_TMP_PATH}/installer"
 
 AIRFRAMES_PATH="/opt/airframes"
 AIRFRAMES_BIN_PATH="${AIRFRAMES_PATH}/bin"
@@ -49,7 +50,8 @@ title="Airframes Installer ${version}"
 ### Functions: System
 
 function checkoutInstaller() {
-  git clone https://github.com/airframesio/scripts.git "${AIRFRAMES_INSTALLER_PATH}/installer"
+  rm -rf "${AIRFRAMES_INSTALLER_PATH}"
+  git clone https://github.com/airframesio/scripts.git "${AIRFRAMES_INSTALLER_PATH}"
 }
 
 function ensureRoot() {
@@ -66,7 +68,7 @@ function initializePaths() {
   mkdir -p "${AIRFRAMES_SRC_PATH}"
   mkdir -p "${AIRFRAMES_TMP_PATH}"
 
-  rm -rf "${AIRFRAMES_INSTALLER_PATH}/logs/*"
+  rm -rf "${AIRFRAMES_INSTALLER_TMP_PATH}/logs/*"
 }
 
 function platform() {
@@ -176,6 +178,7 @@ fi
 
 initializePaths
 installPlatformDependencies
+checkoutInstaller
 
 while [ $? -ne 1 ]
 do
@@ -196,7 +199,7 @@ do
     do
       case $selection in
       1)
-      $(pwd)/decoders/compile/install/acarsdec.sh
+      $AIRFRAMES_INSTALLER_PATH/decoders/compile/install/acarsdec.sh
       if [ $? -ne 0 ]; then
         dialog --title "Error" --msgbox "acarsdec failed to install" 6 50
       fi
@@ -204,7 +207,7 @@ do
       ;;
       2)
       echo "Installing dumphfdl"
-      $(pwd)/decoders/compile/install/dumphfdl.sh
+      $AIRFRAMES_INSTALLER_PATH/decoders/compile/install/dumphfdl.sh
       if [ $? -ne 0 ]; then
         dialog --title "Error" --msgbox "dumphfdl failed to install" 6 50
       fi
@@ -212,7 +215,7 @@ do
       ;;
       3)
       echo "Installing dumpvdl2"
-      $(pwd)/decoders/compile/install/dumpvdl2.sh
+      $AIRFRAMES_INSTALLER_PATH/decoders/compile/install/dumpvdl2.sh
       if [ $? -ne 0 ]; then
         dialog --title "Error" --msgbox "dumpvdl2 failed to install" 6 50
       fi
@@ -220,7 +223,7 @@ do
       ;;
       4)
       echo "Installing vdlm2dec"
-      $(pwd)/decoders/compile/install/vdlm2dec.sh
+      $AIRFRAMES_INSTALLER_PATH/decoders/compile/install/vdlm2dec.sh
       if [ $? -ne 0 ]; then
         dialog --title "Error" --msgbox "vdlm2dec failed to install" 6 50
       fi
@@ -242,7 +245,7 @@ do
   ;;
 
   2)
-  source ./utils/detect-sdrs.sh
+  source $AIRFRAMES_INSTALLER_PATH/utils/detect-sdrs.sh
   sdrs=$(detectSDRs)
   dialog --title "Detected SDRs" --msgbox "$sdrs" 10 50
   sleep 5
