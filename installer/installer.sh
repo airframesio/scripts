@@ -104,10 +104,10 @@ function showPlatformNotSupported() {
 function showMenuMain() {
   local result=$(dialog --title "$title" \
     --cancel-label "Exit" \
-    --menu "Choose an option:" 15 50 3 \
+    --menu "Choose an option:" 15 50 6 \
     1 "Install" \
     2 "Detect SDRs" \
-    3 "Configure SDR assignments" \
+    3 "Assign SDRs to decoders" \
     4 "Configure feeds" \
     5 "Health check" 2>&1 1>&3)
   echo "$result"
@@ -116,7 +116,7 @@ function showMenuMain() {
 function showMenuInstall() {
   local result=$(dialog --title "$title" \
     --cancel-label "Back" \
-    --menu "Choose an option:" 15 50 3 \
+    --menu "Choose an option:" 15 50 4 \
     1 "Install by compiling" \
     2 "Install with Docker" \
     3 "Install with packages" \
@@ -182,6 +182,12 @@ do
 
   if [ "$result" = "1" ]; then
     selections=$(showMenuInstallDecoders)
+    echo "Installing decoders: $selections"
+
+    if [ "$selections" == "" ]; then
+      continue
+    fi
+
     for selection in $selections
     do
       case $selection in
@@ -218,6 +224,7 @@ do
       ;;
       esac
     done
+
     dialog --title "Success" --msgbox "Decoders installed" 6 50
   fi
 
