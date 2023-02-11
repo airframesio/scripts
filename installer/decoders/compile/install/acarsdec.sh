@@ -12,14 +12,14 @@ STEP=$((100/$STEPS))
 current_step=0
 LOG_FILE="/tmp/airframes-installer/logs/acarsdec.log"
 
-srcInit() {
+prepare() {
   mkdir -p /tmp/airframes-installer/src
   mkdir -p /tmp/airframes-installer/logs
   rm -rf /tmp/airframes-installer/src/acarsdec
   rm -rf /tmp/airframes-installer/src/libacars
 }
 
-installDeps() {
+dependencies() {
   apt-get update
   apt-get install -y git build-essential librtlsdr-dev libusb-1.0-0-dev libmirisdr-dev libairspy-dev cmake zlib1g-dev libxml2-dev libsndfile-dev
 }
@@ -57,23 +57,18 @@ EOF
   ) | dialog --title "Installing acarsdec" --gauge "Initializing" 10 70 0
 }
 
-printStep "Initializing"
-srcInit >> $LOG_FILE 2>&1
-((counter+=STEP))
+doStep() {
+  printStep "${@:2}"
+  if [ $1 == "done" ]; then
+    return 0
+  fi
+  $1 >> $LOG_FILE 2>&1
+  ((current_step+=1))
+  ((counter+=STEP))
+}
 
-printStep "Installing dependencies"
-installDeps >> $LOG_FILE 2>&1
-((current_step=1))
-((counter+=STEP))
-
-printStep "Checking out source code"
-checkout >> $LOG_FILE 2>&1
-((current_step=2))
-((counter+=STEP))
-
-printStep "Building"
-build >> $LOG_FILE 2>&1
-((current_step=3))
-((counter+=STEP))
-
-printStep "Done"
+doStep "prepare" "Preparing"
+doStep "dependencies" "Installing dependencies"
+doStep "checkout" "Checking out source code"
+doStep "build" "Building"
+doStep "done" "Done"
