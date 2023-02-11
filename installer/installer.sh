@@ -28,6 +28,8 @@
 
 ### Variables
 
+AIRFRAMES_INSTALLER_PATH="/tmp/airframes-installer"
+
 AIRFRAMES_PATH="/opt/airframes"
 AIRFRAMES_BIN_PATH="${AIRFRAMES_PATH}/bin"
 AIRFRAMES_CONFIG_PATH="${AIRFRAMES_PATH}/config"
@@ -59,6 +61,8 @@ function initializePaths() {
   mkdir -p "${AIRFRAMES_LOG_PATH}"
   mkdir -p "${AIRFRAMES_SRC_PATH}"
   mkdir -p "${AIRFRAMES_TMP_PATH}"
+
+  rm -rf "${AIRFRAMES_INSTALLER_PATH}/logs/*"
 }
 
 function platform() {
@@ -155,14 +159,6 @@ function showMenuConfigureFeeds() {
   echo "$result"
 }
 
-function installManualAcarsdec() {
-  echo "Installing acarsdec"
-  # dialog --infobox "Installing acarsdec" 3 50
-  # curl -s https://raw.githubusercontent.com/airframesio/scripts/master/installer/decoders/compile/install/acarsdec.sh | bash
-  $(pwd)/decoders/compile/install/acarsdec.sh
-}
-
-
 
 ### Main
 
@@ -190,7 +186,7 @@ do
     do
       case $selection in
       1)
-      installManualAcarsdec
+      $(pwd)/decoders/compile/install/acarsdec.sh
       if [ $? -ne 0 ]; then
         dialog --title "Error" --msgbox "acarsdec failed to install" 6 50
       fi
@@ -198,7 +194,7 @@ do
       ;;
       2)
       echo "Installing dumphfdl"
-      installManualDumphfdl
+      $(pwd)/decoders/compile/install/dumphfdl.sh
       if [ $? -ne 0 ]; then
         dialog --title "Error" --msgbox "dumphfdl failed to install" 6 50
       fi
@@ -206,7 +202,7 @@ do
       ;;
       3)
       echo "Installing dumpvdl2"
-      installManualDumphvdl2
+      $(pwd)/decoders/compile/install/dumpvdl2.sh
       if [ $? -ne 0 ]; then
         dialog --title "Error" --msgbox "dumpvdl2 failed to install" 6 50
       fi
@@ -214,7 +210,7 @@ do
       ;;
       4)
       echo "Installing vdlm2dec"
-      installManualVdlm2dec
+      $(pwd)/decoders/compile/install/vdlm2dec.sh
       if [ $? -ne 0 ]; then
         dialog --title "Error" --msgbox "vdlm2dec failed to install" 6 50
       fi
@@ -222,6 +218,7 @@ do
       ;;
       esac
     done
+    dialog --title "Success" --msgbox "Decoders installed" 6 50
   fi
 
   if [ "$result" = "2" ]; then

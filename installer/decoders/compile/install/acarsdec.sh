@@ -1,13 +1,11 @@
 #!/usr/bin/env bash
 #
-# Airframes Installer - acarsdec by TLeconte (ACARS decoder)
-# https://github.com/airframesio/scripts/installer/decoders/install-acarsdec.sh
+# Airframes Installer - Decoder installer - acarsdec by TLeconte (ACARS)
+# https://github.com/airframesio/scripts/installer/decoders/compile/install/acarsdec.sh
 #
 
-# Exit on error
-# set -e
-
 STEPS=4
+TITLE="acarsdec"
 
 source $(dirname -- "$0")/../../../utils/common.sh
 
@@ -20,7 +18,7 @@ prepare() {
 
 dependencies() {
   apt-get update
-  apt-get install -y git build-essential librtlsdr-dev libusb-1.0-0-dev libmirisdr-dev libairspy-dev cmake zlib1g-dev libxml2-dev libsndfile-dev
+  apt-get install -y git build-essential librtlsdr-dev libusb-1.0-0-dev libairspy-dev cmake zlib1g-dev libxml2-dev libsndfile-dev
 }
 
 checkout() {
@@ -43,8 +41,8 @@ build() {
   make install
 }
 
-doStep "prepare" "Preparing"
-doStep "dependencies" "Installing dependencies"
-doStep "checkout" "Checking out source code"
-doStep "build" "Building"
-doStep "done" "Done"
+doStep "$TITLE" "prepare" "Preparing"
+doStep "$TITLE" "dependencies" "Installing dependencies"
+doStep "$TITLE" "checkout" "Checking out source code"
+doStep "$TITLE" "build" "Building"
+doStep "$TITLE" "done" "Done"
