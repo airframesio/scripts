@@ -48,6 +48,10 @@ title="Airframes Installer ${version}"
 
 ### Functions: System
 
+function checkoutInstaller() {
+  git clone https://github.com/airframesio/scripts.git "${AIRFRAMES_INSTALLER_PATH}/installer"
+}
+
 function ensureRoot() {
   if [ "$(id -u)" != "0" ]; then
     echo "This script must be run as root. Rerun with sudo!" 1>&2

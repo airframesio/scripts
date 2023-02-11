@@ -1,31 +1,28 @@
 #!/usr/bin/env bash
 #
-# Airframes Installer - Decoder installer - dumphfdl by szpajder (HFDL)
-# https://github.com/airframesio/scripts/installer/decoders/compile/install/dumphfdl.sh
+# Airframes Installer - Decoder installer - vdlm2dec by TLeconte (VDL)
+# https://github.com/airframesio/scripts/installer/decoders/compile/install/vdlm2dec.sh
 #
 
 STEPS=4
-TITLE="dumphfdl"
+TITLE="vdlm2dec"
 
 source $(dirname -- "$0")/../../../utils/common.sh
 
 prepare() {
   mkdir -p /tmp/airframes-installer/src
   mkdir -p /tmp/airframes-installer/logs
-  rm -rf /tmp/airframes-installer/src/dumphfdl
+  rm -rf /tmp/airframes-installer/src/vdlm2dec
   rm -rf /tmp/airframes-installer/src/libacars
 }
 
 dependencies() {
   apt-get update
-  apt-get install -y git build-essential cmake pkg-config libglib2.0-dev libconfig++-dev libliquid-dev libfftw3-dev libsoapysdr-dev libzmq3-dev librtlsdr-dev libairspy-dev libusb-1.0-0-dev
-
-  # Necessary because existence breaks build, and manual overrides to cmake don't seem to work
-  apt-get remove -y libmirisdr-dev
+  apt-get install -y git build-essential librtlsdr-dev libusb-1.0-0-dev libairspy-dev cmake zlib1g-dev libxml2-dev libsndfile-dev
 }
 
 checkout() {
-  git clone https://github.com/szpajder/dumphfdl.git /tmp/airframes-installer/src/dumphfdl
+  git clone https://github.com/TLeconte/vdlm2dec.git /tmp/airframes-installer/src/vdlm2dec
   git clone https://github.com/szpajder/libacars.git /tmp/airframes-installer/src/libacars
 }
 
@@ -37,10 +34,10 @@ build() {
   make install
   ldconfig
 
-  cd /tmp/airframes-installer/src/dumphfdl
+  cd /tmp/airframes-installer/src/vdlm2dec
   mkdir build
   cd build
-  cmake ..
+  cmake .. -Drtl=ON
   make install
 }
 
