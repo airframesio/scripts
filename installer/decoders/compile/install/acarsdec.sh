@@ -8,9 +8,8 @@
 # set -e
 
 STEPS=4
-STEP=$((100/$STEPS))
-current_step=0
-LOG_FILE="/tmp/airframes-installer/logs/acarsdec.log"
+
+source $(dirname -- "$0")/../../../utils/common.sh
 
 prepare() {
   mkdir -p /tmp/airframes-installer/src
@@ -42,29 +41,6 @@ build() {
   cd build
   cmake .. -Drtl=ON
   make install
-}
-
-printStep() {
-  (
-    cat <<EOF
-XXX
-$counter
-$counter% installed
-
-$1
-XXX
-EOF
-  ) | dialog --title "Installing acarsdec" --gauge "Initializing" 10 70 0
-}
-
-doStep() {
-  printStep "${@:2}"
-  if [ $1 == "done" ]; then
-    return 0
-  fi
-  $1 >> $LOG_FILE 2>&1
-  ((current_step+=1))
-  ((counter+=STEP))
 }
 
 doStep "prepare" "Preparing"
