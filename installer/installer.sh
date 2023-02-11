@@ -28,6 +28,17 @@
 
 ### Variables
 
+AIRFRAMES_PATH="/opt/airframes"
+AIRFRAMES_BIN_PATH="${AIRFRAMES_PATH}/bin"
+AIRFRAMES_CONFIG_PATH="${AIRFRAMES_PATH}/config"
+AIRFRAMES_LOG_PATH="${AIRFRAMES_PATH}/log"
+AIRFRAMES_SRC_PATH="${AIRFRAMES_PATH}/src"
+AIRFRAMES_TMP_PATH="${AIRFRAMES_PATH}/tmp"
+
+AIRFRAMES_CONFIG_FILE="${AIRFRAMES_CONFIG_PATH}/config.json"
+AIRFRAMES_FEEDS_FILE="${AIRFRAMES_CONFIG_PATH}/feeds.json"
+AIRFRAMES_SDRS_FILE="${AIRFRAMES_CONFIG_PATH}/sdrs.json"
+
 exec 3>&1
 
 version="0.1.0"
@@ -40,6 +51,14 @@ function ensureRoot() {
     echo "This script must be run as root. Rerun with sudo!" 1>&2
     exit 1
   fi
+}
+
+function initializePaths() {
+  mkdir -p "${AIRFRAMES_BIN_PATH}"
+  mkdir -p "${AIRFRAMES_CONFIG_PATH}"
+  mkdir -p "${AIRFRAMES_LOG_PATH}"
+  mkdir -p "${AIRFRAMES_SRC_PATH}"
+  mkdir -p "${AIRFRAMES_TMP_PATH}"
 }
 
 function platform() {
@@ -155,6 +174,7 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
+initializePaths
 installPlatformDependencies
 
 while [ $? -ne 1 ]
@@ -170,7 +190,7 @@ do
     do
       case $selection in
       1)
-      sudo installManualAcarsdec
+      installManualAcarsdec
       if [ $? -ne 0 ]; then
         dialog --title "Error" --msgbox "acarsdec failed to install" 6 50
       fi
@@ -178,7 +198,7 @@ do
       ;;
       2)
       echo "Installing dumphfdl"
-      sudo installManualDumphfdl
+      installManualDumphfdl
       if [ $? -ne 0 ]; then
         dialog --title "Error" --msgbox "dumphfdl failed to install" 6 50
       fi
@@ -186,7 +206,7 @@ do
       ;;
       3)
       echo "Installing dumpvdl2"
-      sudo installManualDumphvdl2
+      installManualDumphvdl2
       if [ $? -ne 0 ]; then
         dialog --title "Error" --msgbox "dumpvdl2 failed to install" 6 50
       fi
@@ -194,7 +214,7 @@ do
       ;;
       4)
       echo "Installing vdlm2dec"
-      sudo installManualVdlm2dec
+      installManualVdlm2dec
       if [ $? -ne 0 ]; then
         dialog --title "Error" --msgbox "vdlm2dec failed to install" 6 50
       fi
