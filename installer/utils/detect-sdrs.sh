@@ -6,13 +6,14 @@
 # Array of SDR USB VID:PID pairs
 # Add additional pairs to this list for any supported SDR
 SDR_DEVICES=(
-  "0x0bda:0x2832"    # RealTek 2832
+  "0x0bda:0x2832" # RealTek 2832
+  "0x0bda:0x2838" # RTL-SDR.com RTL2838U
 )
 
 function detectSDRs() {
   local -a srdinfo
 
-  for sdrdev in "${SDR_DEVICES[*]}"; do
+  for sdrdev in "${SDR_DEVICES[@]}"; do
     IFS=':' read -r -a sdr <<< "$sdrdev"
     local devlist=$(lsusb -d ${sdr[0]}:${sdr[1]})
 
@@ -51,5 +52,3 @@ function detectSDRs() {
   sdrjson=$(jq -n '.detected |= [inputs]' <<< "${sdrinfo[@]}")
   echo "$sdrjson"
 }
-
-getSDRs
