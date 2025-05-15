@@ -991,12 +991,12 @@ fi
 echo
 echo
 echo -e "${BOLD}${BLUE}╔═════════════════════════════════════╗${RESET}"
-echo -e "${BOLD}${BLUE}║   AIRFRAMES DIAGNOSTIC SUMMARY     ║${RESET}"
+echo -e "${BOLD}${BLUE}║   AIRFRAMES DIAGNOSTIC SUMMARY      ║${RESET}"
 echo -e "${BOLD}${BLUE}╚═════════════════════════════════════╝${RESET}"
 
 # Section 1: Test Results with interpretations
 echo -e "\n${BOLD}${BLUE}╔═════════════════════════════════════╗${RESET}"
-echo -e "${BOLD}${BLUE}║          TEST RESULTS             ║${RESET}"
+echo -e "${BOLD}${BLUE}║          TEST RESULTS               ║${RESET}"
 echo -e "${BOLD}${BLUE}╚═════════════════════════════════════╝${RESET}"
 
 # DNS results
