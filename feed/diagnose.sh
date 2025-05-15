@@ -403,22 +403,19 @@ detect_tools() {
 
     # DNS lookup tools (prioritized)
     DNS_TOOL=""
-    if command -v dig &> /dev/null || command -v host &> /dev/null || command -v nslookup &> /dev/null; then
-        if command -v dig >/dev/null 2>&1; then
-            DNS_TOOL="dig"
-            echo -e "${GREEN}Found DNS tool:${RESET} ${DNS_TOOL}"
-        elif command -v host >/dev/null 2>&1; then
-            DNS_TOOL="host"
-            echo -e "${GREEN}Found DNS tool:${RESET} host"
-        elif command -v nslookup >/dev/null 2>&1; then
-            DNS_TOOL="nslookup"
-            echo -e "${GREEN}Found DNS tool:${RESET} ${DNS_TOOL}"
-        fi
+    if command -v dig >/dev/null 2>&1; then
+        DNS_TOOL="dig"
+        echo -e "${GREEN}Found DNS tool:${RESET} ${DNS_TOOL}"
+    elif command -v host >/dev/null 2>&1; then
+        DNS_TOOL="host"
+        echo -e "${GREEN}Found DNS tool:${RESET} ${DNS_TOOL}"
     elif command -v nslookup >/dev/null 2>&1; then
         DNS_TOOL="nslookup"
         echo -e "${GREEN}Found DNS tool:${RESET} ${DNS_TOOL}"
     else
-        check_tool "dig" "dig (DNS lookup tool)" "$(get_install_command bind-utils)"
+        # Only show error if all three DNS tools are missing
+        echo -e "${RED}Missing DNS tools.${RESET} Please install one of: dig, host, or nslookup"
+        echo -e "${YELLOW}Installation:${RESET} $(get_install_command bind-utils) or $(get_install_command dnsutils)"
     fi
     
     # Ping check
@@ -525,11 +522,9 @@ if [ "$(id -u)" != "0" ]; then
 fi
 
 # Banner
-echo
 echo -e "${BOLD}${MAGENTA}╔═════════════════════════════════════╗${RESET}"
-echo -e "${BOLD}${MAGENTA}║  ${BOLD}${GREEN}AIRFRAMES FEED DIAGNOSTIC TOOL${RESET}${BOLD}${MAGENTA}     ║${RESET}"
+echo -e "${BOLD}${MAGENTA}║    ${BOLD}${GREEN}AIRFRAMES FEED DIAGNOSTIC TOOL${RESET}${BOLD}${MAGENTA}   ║${RESET}"
 echo -e "${BOLD}${MAGENTA}╚═════════════════════════════════════╝${RESET}"
-echo
 always_print "${CYAN}Time: $(date)${RESET}"
 always_print "${CYAN}System: $(uname -a)${RESET}"
 always_print "${CYAN}Platform: ${DETECTED_PLATFORM}${RESET}"
@@ -608,18 +603,17 @@ if [ -n "$DNS_TOOL" ]; then
         DNS_SUMMARY="DNS Resolution: ${GREEN}PASSED${RESET}"
     fi
 else
-    DNS_TEST_RESULT="skipped"
+    DNS_TEST_RESULT="failed"
     if [ "$DEBUG_MODE" = "true" ]; then
-        echo -e "${RED}[SKIPPED]${RESET} No DNS lookup tools available (dig, host, or nslookup)"
+        echo -e "${RED}[FAILED]${RESET} No DNS lookup tools available (dig, host, or nslookup)"
         echo -e "${YELLOW}Recommendation: Install dig, host, or nslookup.${RESET}"
     else
-        # Show skipped indicator
-        echo -e " ${YELLOW}–${RESET}"
-        SUMMARY_TOTAL=$((SUMMARY_TOTAL+1))
-        SUMMARY_PASSED=$((SUMMARY_PASSED+1))
-        DNS_SUMMARY="DNS Resolution: ${GREEN}PASSED${RESET}"
-        DNS_PASSED=true
+        # Show failed indicator
+        echo -e " ${RED}✗${RESET}"
     fi
+    SUMMARY_FAILED=$((SUMMARY_FAILED+1))
+    DNS_SUMMARY="DNS Resolution: ${RED}FAILED${RESET}"
+    DNS_PASSED=false
 fi
 
 # 2. Check if feed.airframes.io is reachable
@@ -874,7 +868,7 @@ if [ "$DEBUG_MODE" = "true" ]; then
     echo -e "${BOLD}${MAGENTA}=== Port Connectivity Check ===${RESET}"
 else
     # In non-debug mode, just a simple one-line header with no preceding newline
-    # Print Port Connectivity header with no preceding newline by using tr to strip any newlines
+    # Print Port Connectivity header with no preceding newline
     printf "${BOLD}${MAGENTA}Port Connectivity Check:${RESET} "
 fi
 
@@ -990,11 +984,11 @@ else
 fi
 # Now add our final summary display after port tests are complete
 echo -e "${BOLD}${MAGENTA}╔═════════════════════════════════════╗${RESET}"
-echo -e "${BOLD}${MAGENTA}║  ${BOLD}${GREEN}AIRFRAMES DIAGNOSTIC SUMMARY${RESET}${BOLD}${MAGENTA}       ║${RESET}"
+echo -e "${BOLD}${MAGENTA}║    ${BOLD}${GREEN}AIRFRAMES DIAGNOSTIC SUMMARY${RESET}${BOLD}${MAGENTA}     ║${RESET}"
 echo -e "${BOLD}${MAGENTA}╚═════════════════════════════════════╝${RESET}"
 
 # Section 1: Test Results with interpretations
-echo -e "\n${BOLD}${BLUE}╔═════════════════════════════════════╗${RESET}"
+echo -e "${BOLD}${BLUE}╔═════════════════════════════════════╗${RESET}"
 echo -e "${BOLD}${BLUE}║          TEST RESULTS               ║${RESET}"
 echo -e "${BOLD}${BLUE}╚═════════════════════════════════════╝${RESET}"
 
@@ -1071,33 +1065,36 @@ if [ $SUMMARY_TOTAL -gt 0 ]; then
 fi
 
 # Display overall statistics
-echo -e "\n${BOLD}${BLUE}╔═════════════════════════════════════╗${RESET}"
+echo
+echo -e "${BOLD}${BLUE}╔═════════════════════════════════════╗${RESET}"
 echo -e "${BOLD}${BLUE}║        OVERALL STATISTICS           ║${RESET}"
 echo -e "${BOLD}${BLUE}╚═════════════════════════════════════╝${RESET}"
 echo -e "Tests passed: ${GREEN}$SUMMARY_PASSED/${SUMMARY_TOTAL}${RESET} (${SUMMARY_PASSED} of ${SUMMARY_TOTAL} tests passed)"
 echo -e "Success rate: $([ $SUCCESS_RATE -ge 75 ] && echo "${GREEN}" || echo "${YELLOW}")${SUCCESS_RATE}%${RESET}"
 
 # Overall assessment and recommendations
-echo -e "\n${BOLD}${BLUE}╔═════════════════════════════════════╗${RESET}"
+echo
+echo -e "${BOLD}${BLUE}╔═════════════════════════════════════╗${RESET}"
 echo -e "${BOLD}${BLUE}║   CONCLUSION & RECOMMENDATIONS      ║${RESET}"
 echo -e "${BOLD}${BLUE}╚═════════════════════════════════════╝${RESET}"
 
 # Determine overall assessment based on success rate
 if [ $SUCCESS_RATE -ge 75 ]; then
-    echo -e "${GREEN}✓ Diagnostic assessment:${RESET} Good connection to Airframes feed"
-    echo -e "  Your system appears to have good connectivity to the Airframes feed."
+    echo -e "${GREEN}✓ Diagnostic assessment:${RESET} Good connectivity"
+    echo -e "  Your system appears to have good connectivity to Airframes."
 elif [ $SUCCESS_RATE -ge 50 ]; then
-    echo -e "${YELLOW}⚠ Diagnostic assessment:${RESET} Partial connectivity to Airframes feed"
+    echo -e "${YELLOW}⚠ Diagnostic assessment:${RESET} Partial connectivity"
     echo -e "  Your system has connectivity issues that may affect feed performance."
     if [ $PORT_CONNECTIVITY_PASSED -eq 0 ]; then
         echo -e "  ${YELLOW}• Check your firewall settings to allow the required Airframes ports${RESET}"
     fi
 else
-    echo -e "${RED}✗ Diagnostic assessment:${RESET} Poor connectivity to Airframes feed"
-    echo -e "  Your system has significant connectivity issues with the Airframes feed."
+    echo -e "${RED}✗ Diagnostic assessment:${RESET} Poor connectivity"
+    echo -e "  Your system has significant connectivity issues with Airframes."
     echo -e "  ${YELLOW}• Check your network connection${RESET}"
     echo -e "  ${YELLOW}• Check your firewall settings${RESET}"
     echo -e "  ${YELLOW}• Make sure your ISP doesn't block the required ports${RESET}"
+    echo -e "  ${YELLOW}• Make sure there is not currently an Airframes outage${RESET}"
 fi
 
 # Display timestamp and support information
@@ -1336,15 +1333,10 @@ if [ -n "$CONNECT_TOOL" ]; then
     SUCCESS_PORT_LIST=${SUCCESS_PORT_LIST%, }
     FAILED_PORT_LIST=${FAILED_PORT_LIST%, }
     
-    # Set port connectivity test summary for the final report
-    PORT_CONNECTIVITY_PASSED=$((SUCCESS_PORTS + UDP_PORTS_RESPONDING))
-    PORT_CONNECTIVITY_TOTAL=$((TCP_PORTS_TESTED + UDP_PORTS_TESTED))
+    # Clean up temp directory
+    rm -rf "$PORT_TMP_DIR" 2>/dev/null
     
-    # Add a line break in non-debug mode after all ports are tested
-    if [ "$DEBUG_MODE" != "true" ]; then
-        echo
-    fi
-    
+    # Set status based on results
     if [ $PORT_CONNECTIVITY_PASSED -gt 0 ]; then
         PORT_TEST_STATUS="success"
         SUMMARY_PASSED=$((SUMMARY_PASSED+1))
@@ -1353,6 +1345,8 @@ if [ -n "$CONNECT_TOOL" ]; then
         SUMMARY_FAILED=$((SUMMARY_FAILED+1))
     fi
     SUMMARY_TOTAL=$((SUMMARY_TOTAL+1))
+    fi
+done
     
     # The summary will be displayed by the exit trap handler
     
@@ -1402,13 +1396,12 @@ if [ -n "$CONNECT_TOOL" ]; then
         fi
         
         if [ "$FAILED_PORT_LIST" != "" ]; then
-            echo -e "\n${RED}Failed ports:${RESET} $FAILED_PORT_LIST"
+            echo -e "${RED}Failed ports:${RESET} $FAILED_PORT_LIST"
         fi
-    fi
-    
-    # In non-debug mode, just print success/failure
-    if [ "$DEBUG_MODE" != "true" ]; then
-        echo -e "\n"
+   # Ensure we have a clean transition to the summary section
+if [ "$DEBUG_MODE" = "false" ]; then
+    echo
+fi
         print_section_result "Port connectivity check" "$PORT_TEST_STATUS"
     fi
 else
