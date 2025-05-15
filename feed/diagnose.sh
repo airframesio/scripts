@@ -398,8 +398,9 @@ detect_tools() {
     # Required tools
     echo -e "${BLUE}Checking required tools...${RESET}"
     
-    # Initialize DNS test counters
+    # Initialize counters and flags
     SUMMARY_TOTAL=$((SUMMARY_TOTAL+1))
+    MISSING_TOOLS=false
 
     # DNS lookup tools (prioritized)
     DNS_TOOL=""
@@ -416,6 +417,7 @@ detect_tools() {
         # Only show error if all three DNS tools are missing
         echo -e "${RED}Missing DNS tools.${RESET} Please install one of: dig, host, or nslookup"
         echo -e "${YELLOW}Installation:${RESET} $(get_install_command bind-utils) or $(get_install_command dnsutils)"
+        MISSING_TOOLS=true
     fi
     
     # Ping check
@@ -424,7 +426,9 @@ detect_tools() {
         PING_AVAILABLE=true
         echo -e "${GREEN}Found connectivity tool:${RESET} ping"
     else
-        check_tool "ping" "ping (connectivity check tool)" "$(get_install_command iputils-ping)"
+        echo -e "${RED}Missing ping.${RESET} Please install ping"
+        echo -e "${YELLOW}Installation:${RESET} $(get_install_command iputils-ping)"
+        MISSING_TOOLS=true
     fi
     
     # Traceroute tools (prioritized)
@@ -436,7 +440,9 @@ detect_tools() {
         TRACE_TOOL="tracepath"
         echo -e "${GREEN}Found tracing tool:${RESET} tracepath"
     else
-        check_tool "traceroute" "traceroute (path tracing tool)" "$(get_install_command traceroute)"
+        echo -e "${RED}Missing traceroute.${RESET} Please install traceroute or tracepath"
+        echo -e "${YELLOW}Installation:${RESET} $(get_install_command traceroute)"
+        MISSING_TOOLS=true
     fi
     
     # Connection testing tools (prioritized)
@@ -449,12 +455,14 @@ detect_tools() {
         echo -e "${GREEN}Found connection tool:${RESET} ncat"
     elif command -v netcat >/dev/null 2>&1; then
         CONNECT_TOOL="netcat"
-        echo -e "${GREEN}Found connection tool:${RESET} ${CONNECT_TOOL}"
+        echo -e "${GREEN}Found connection tool:${RESET} netcat"
     elif command -v telnet >/dev/null 2>&1; then
         CONNECT_TOOL="telnet"
         echo -e "${GREEN}Found connection tool:${RESET} telnet"
     else
-        check_tool "nc" "netcat (network connection tool)" "$(get_install_command netcat)"
+        echo -e "${RED}Missing connection testing tool.${RESET} Please install nc, ncat, netcat, or telnet"
+        echo -e "${YELLOW}Installation:${RESET} $(get_install_command netcat)"
+        MISSING_TOOLS=true
     fi
     
     # Timeout command for long-running processes
@@ -468,10 +476,13 @@ detect_tools() {
     fi
     
     echo
-    if [ $MISSING_TOOLS -gt 0 ]; then
-        echo -e "${YELLOW}Missing $MISSING_TOOLS required tools. Some tests will be skipped.${RESET}"
-        echo -e "${YELLOW}Please install the missing tools for best results.${RESET}"
-        echo
+    
+    # Exit if required tools are missing
+    if [ "$MISSING_TOOLS" = "true" ]; then
+        echo -e "${RED}ERROR: Critical tools are missing.${RESET}"
+        echo -e "${YELLOW}Please install the missing tools listed above before running this script.${RESET}"
+        echo -e "${YELLOW}Exiting because required tools are not available.${RESET}"
+        exit 1
     fi
 }
 
