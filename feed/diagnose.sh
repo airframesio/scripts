@@ -521,14 +521,15 @@ detect_platform
 
 # Check if we're running as root - some commands might need elevated privileges
 if [ "$(id -u)" != "0" ]; then
-    always_print "${DARK_GREY}Note: Some checks may require root privileges. Consider running with sudo.${RESET}"
-    echo
+    always_print "${DARK_GREY}Note: Some checks may require root privileges. Consider running with sudo."
 fi
 
 # Banner
-echo -e "${BOLD}${BLUE}╔═════════════════════════════════════╗${RESET}"
-echo -e "${BOLD}${BLUE}║   AIRFRAMES FEED DIAGNOSTIC TOOL    ║${RESET}"
-echo -e "${BOLD}${BLUE}╚═════════════════════════════════════╝${RESET}"
+echo
+echo -e "${BOLD}${MAGENTA}╔═════════════════════════════════════╗${RESET}"
+echo -e "${BOLD}${MAGENTA}║  ${BOLD}${GREEN}AIRFRAMES FEED DIAGNOSTIC TOOL${RESET}${BOLD}${MAGENTA}     ║${RESET}"
+echo -e "${BOLD}${MAGENTA}╚═════════════════════════════════════╝${RESET}"
+echo
 always_print "${CYAN}Time: $(date)${RESET}"
 always_print "${CYAN}System: $(uname -a)${RESET}"
 always_print "${CYAN}Platform: ${DETECTED_PLATFORM}${RESET}"
@@ -988,11 +989,9 @@ else
     PORT_SUMMARY="${PORT_SUMMARY}${RED}FAILED${RESET}"
 fi
 # Now add our final summary display after port tests are complete
-echo
-echo
-echo -e "${BOLD}${BLUE}╔═════════════════════════════════════╗${RESET}"
-echo -e "${BOLD}${BLUE}║   AIRFRAMES DIAGNOSTIC SUMMARY      ║${RESET}"
-echo -e "${BOLD}${BLUE}╚═════════════════════════════════════╝${RESET}"
+echo -e "${BOLD}${MAGENTA}╔═════════════════════════════════════╗${RESET}"
+echo -e "${BOLD}${MAGENTA}║  ${BOLD}${GREEN}AIRFRAMES DIAGNOSTIC SUMMARY${RESET}${BOLD}${MAGENTA}       ║${RESET}"
+echo -e "${BOLD}${MAGENTA}╚═════════════════════════════════════╝${RESET}"
 
 # Section 1: Test Results with interpretations
 echo -e "\n${BOLD}${BLUE}╔═════════════════════════════════════╗${RESET}"
