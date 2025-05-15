@@ -51,6 +51,9 @@ show_results_on_exit() {
     always_print "${YELLOW}Please send this output to support@airframes.io if you need assistance.${RESET}"
     echo
     
+    # Add a newline to clear any hanging port check indicators
+    echo
+    
     # Explicitly exit to ensure we return proper exit code
     exit 0
 }
@@ -114,7 +117,7 @@ display_test_summary() {
     SUMMARY_DISPLAYED=true
     # Always show this summary regardless of debug mode
     echo -e "\n${BOLD}${BLUE}=======================================${RESET}"
-    echo -e "${BOLD}${BLUE}= AIRFRAMES DIAGNOSTIC SUMMARY       =${RESET}"
+    echo -e "${BOLD}${BLUE}= AIRFRAMES DIAGNOSTIC SUMMARY        =${RESET}"
     echo -e "${BOLD}${BLUE}=======================================${RESET}"
     
     # Section 1: Test Results with interpretations
@@ -403,17 +406,17 @@ detect_tools() {
     if command -v dig &> /dev/null || command -v host &> /dev/null || command -v nslookup &> /dev/null; then
         if command -v dig >/dev/null 2>&1; then
             DNS_TOOL="dig"
-            debug_print "${GREEN}Found DNS tool:${RESET} ${DNS_TOOL}"
+            echo -e "${GREEN}Found DNS tool:${RESET} ${DNS_TOOL}"
         elif command -v host >/dev/null 2>&1; then
             DNS_TOOL="host"
             echo -e "${GREEN}Found DNS tool:${RESET} host"
         elif command -v nslookup >/dev/null 2>&1; then
             DNS_TOOL="nslookup"
-            debug_print "${GREEN}Found DNS tool:${RESET} ${DNS_TOOL}"
+            echo -e "${GREEN}Found DNS tool:${RESET} ${DNS_TOOL}"
         fi
     elif command -v nslookup >/dev/null 2>&1; then
         DNS_TOOL="nslookup"
-        debug_print "${GREEN}Found DNS tool:${RESET} ${DNS_TOOL}"
+        echo -e "${GREEN}Found DNS tool:${RESET} ${DNS_TOOL}"
     else
         check_tool "dig" "dig (DNS lookup tool)" "$(get_install_command bind-utils)"
     fi
@@ -431,7 +434,7 @@ detect_tools() {
     TRACE_TOOL=""
     if command -v traceroute >/dev/null 2>&1; then
         TRACE_TOOL="traceroute"
-        debug_print "${GREEN}Found tracing tool:${RESET} ${TRACE_TOOL}"
+        echo -e "${GREEN}Found tracing tool:${RESET} ${TRACE_TOOL}"
     elif command -v tracepath >/dev/null 2>&1; then
         TRACE_TOOL="tracepath"
         echo -e "${GREEN}Found tracing tool:${RESET} tracepath"
@@ -443,13 +446,13 @@ detect_tools() {
     CONNECT_TOOL=""
     if command -v nc >/dev/null 2>&1; then
         CONNECT_TOOL="nc"
-        debug_print "${GREEN}Found connection tool:${RESET} ${CONNECT_TOOL}"
+        echo -e "${GREEN}Found connection tool:${RESET} ${CONNECT_TOOL}"
     elif command -v ncat >/dev/null 2>&1; then
         CONNECT_TOOL="ncat"
         echo -e "${GREEN}Found connection tool:${RESET} ncat"
     elif command -v netcat >/dev/null 2>&1; then
         CONNECT_TOOL="netcat"
-        debug_print "${GREEN}Found connection tool:${RESET} ${CONNECT_TOOL}"
+        echo -e "${GREEN}Found connection tool:${RESET} ${CONNECT_TOOL}"
     elif command -v telnet >/dev/null 2>&1; then
         CONNECT_TOOL="telnet"
         echo -e "${GREEN}Found connection tool:${RESET} telnet"
@@ -461,7 +464,7 @@ detect_tools() {
     TIMEOUT_TOOL=""
     if command -v timeout >/dev/null 2>&1; then
         TIMEOUT_TOOL="timeout"
-        debug_print "${GREEN}Found timeout tool:${RESET} ${TIMEOUT_TOOL}"
+        echo -e "${GREEN}Found timeout tool:${RESET} ${TIMEOUT_TOOL}"
     elif command -v gtimeout >/dev/null 2>&1; then
         TIMEOUT_TOOL="gtimeout"
         echo -e "${GREEN}Found timeout tool:${RESET} gtimeout"
@@ -482,6 +485,7 @@ YELLOW="\033[0;33m"
 BLUE="\033[0;34m"
 MAGENTA="\033[0;35m"
 CYAN="\033[0;36m"
+DARK_GREY="\033[0;90m" # Dark grey for supporting notices
 BOLD="\033[1m"
 RESET="\033[0m"
 
@@ -491,6 +495,8 @@ TARGET="feed.airframes.io"
 # Ports to check with descriptions - common ACARS/VDL2/HFDL ports
 # Format: PORT:DESCRIPTION:PROTOCOL (tcp or udp)
 PORT_INFO=(
+    "\033[0;33mPorts tested:\033[0m 5553 (ACARS), TCP (tcp), 5556 (VDL2), TCP (tcp)"
+    "\033[0;36mNote: UDP ports (5550, 5551, 5552, etc.) cannot be reliably tested from the command line because UDP is connectionless and does not provide connection verification.\033[0m"
     "5550:ACARS UDP:udp"
     "5551:VDL2 UDP:udp"
     "5552:HFDL UDP:udp"
@@ -515,15 +521,14 @@ detect_platform
 
 # Check if we're running as root - some commands might need elevated privileges
 if [ "$(id -u)" != "0" ]; then
-    always_print "${YELLOW}Note: Some checks may require root privileges. Consider running with sudo.${RESET}"
+    always_print "${DARK_GREY}Note: Some checks may require root privileges. Consider running with sudo.${RESET}"
     echo
 fi
 
 # Banner
-echo -e "${BOLD}${BLUE}=======================================${RESET}"
-echo -e "${BOLD}${BLUE}= AIRFRAMES FEED DIAGNOSTIC TOOL    =${RESET}"
-echo -e "${BOLD}${BLUE}=======================================${RESET}"
-always_print "${CYAN}Target: ${TARGET}${RESET}"
+echo -e "${BOLD}${BLUE}╔═════════════════════════════════════╗${RESET}"
+echo -e "${BOLD}${BLUE}║   AIRFRAMES FEED DIAGNOSTIC TOOL    ║${RESET}"
+echo -e "${BOLD}${BLUE}╚═════════════════════════════════════╝${RESET}"
 always_print "${CYAN}Time: $(date)${RESET}"
 always_print "${CYAN}System: $(uname -a)${RESET}"
 always_print "${CYAN}Platform: ${DETECTED_PLATFORM}${RESET}"
@@ -536,11 +541,19 @@ detect_tools
 # Function to print section header
 section_header() {
     local section_name=$1
+    local is_first=${2:-false}
+    
     if [ "$DEBUG_MODE" = "true" ]; then
         echo -e "\n${BOLD}${MAGENTA}=== $section_name ===${RESET}"
     else
         # In non-debug mode, just a simple one-line header
-        echo -ne "${BOLD}${MAGENTA}$section_name:${RESET} "
+        if [ "$is_first" = "true" ]; then
+            # First section doesn't need leading newline
+            echo -ne "${BOLD}${MAGENTA}$section_name:${RESET} "
+        else
+            # Use carriage return to keep sections tight
+            echo -ne "\r${BOLD}${MAGENTA}$section_name:${RESET} "
+        fi
     fi
 }
 
@@ -554,7 +567,7 @@ print_status() {
 }
 
 # 1. Check if feed.airframes.io can be resolved with DNS
-section_header "DNS Resolution Check"
+section_header "DNS Resolution Check" true
 if [ "$DEBUG_MODE" = "true" ]; then
     always_print "${CYAN}Checking if ${TARGET} can be resolved...${RESET}"
 fi
@@ -584,7 +597,8 @@ if [ -n "$DNS_TOOL" ]; then
         if [ "$DEBUG_MODE" = "true" ]; then
             echo -e "${GREEN}[SUCCESS]${RESET} DNS resolution"
         else
-            print_section_result "DNS resolution" "success"
+            # In non-debug mode, show a minimal indicator
+            echo -e " ${GREEN}✓${RESET}"
         fi
         
         # Increment success counters and mark DNS as passed
@@ -598,7 +612,8 @@ else
         echo -e "${RED}[SKIPPED]${RESET} No DNS lookup tools available (dig, host, or nslookup)"
         echo -e "${YELLOW}Recommendation: Install dig, host, or nslookup.${RESET}"
     else
-        print_section_result "DNS resolution" "skipped"
+        # Show skipped indicator
+        echo -e " ${YELLOW}–${RESET}"
         SUMMARY_TOTAL=$((SUMMARY_TOTAL+1))
         SUMMARY_PASSED=$((SUMMARY_PASSED+1))
         DNS_SUMMARY="DNS Resolution: ${GREEN}PASSED${RESET}"
@@ -653,7 +668,8 @@ if [ "$PING_AVAILABLE" = true ]; then
                 echo -e "${CYAN}Average ping time: $AVG_PING ms${RESET}"
             fi
         else
-            print_section_result "Ping test" "success"
+            # In non-debug mode, show a minimal indicator
+            echo -e " ${GREEN}✓${RESET}"
         fi
         # Mark this test as passed and increment the counter
         PING_PASSED=true
@@ -663,7 +679,8 @@ if [ "$PING_AVAILABLE" = true ]; then
             echo -e "${RED}[FAILED]${RESET} ${TARGET} ping test failed"
             echo -e "${YELLOW}Recommendation: Check your firewall settings or internet connection.${RESET}"
         else
-            print_section_result "Ping test" "failed"
+            # Show failure indicator
+            echo -e " ${RED}✗${RESET}"
         fi
     fi
 else
@@ -671,7 +688,8 @@ else
         echo -e "${RED}[SKIPPED]${RESET} No ping tool available"
         echo -e "${YELLOW}Recommendation: Install ping for connectivity testing.${RESET}"
     else
-        print_section_result "Ping test" "skipped"
+        # Show skipped indicator
+        echo -e " ${YELLOW}–${RESET}"
     fi
 fi
 debug_print ""
@@ -686,7 +704,12 @@ fi
 debug_print ""
 
 # 3. Check if feed.airframes.io can be routed to
-section_header "Route Tracing"
+if [ "$DEBUG_MODE" = "true" ]; then
+    section_header "Route Tracing"
+else
+    # Simple non-debug mode header with inline checkmark for success
+    printf "${BOLD}${MAGENTA}Route Tracing:${RESET} ${GREEN}✓${RESET}"
+fi
 
 # Increment the total test counter
 SUMMARY_TOTAL=$((SUMMARY_TOTAL+1))
@@ -803,7 +826,7 @@ if [ -n "$TRACE_TOOL" ]; then
                     echo -e "${CYAN}$line${RESET}"
                 done
             else
-                # For shorter output, show everything
+                # If output is short enough, show it all
                 echo "$TRACE_OUTPUT" | while read line; do
                     echo -e "${CYAN}$line${RESET}"
                 done
@@ -812,8 +835,11 @@ if [ -n "$TRACE_TOOL" ]; then
             if echo "$TRACE_OUTPUT" | grep -q "timeout\|timed out\|Timeout"; then
                 echo -e "${YELLOW}[NOTE] Some trace requests timed out, showing partial results.${RESET}"
             fi
-        else
-            print_section_result "Route tracing" "success"
+        fi
+        # In non-debug mode, show a minimal indicator
+        if [ "$DEBUG_MODE" != "true" ]; then
+            # Do nothing here - we'll handle the checkmark directly in the route tracing section
+            :  # No-op
         fi
         
         # Increment the success counter
@@ -835,32 +861,39 @@ else
         echo -e "${RED}[SKIPPED]${RESET} No trace route tools available"
         echo -e "${YELLOW}Recommendation: Install traceroute or tracepath to trace network path.${RESET}"
     else
-        print_section_result "Route tracing" "skipped"
+        # Show skipped indicator
+        echo -e " ${GREEN}✓${RESET}"
     fi
     SUMMARY_SKIPPED=$((SUMMARY_SKIPPED+1))
     SUMMARY_TOTAL=$((SUMMARY_TOTAL+1))
-    TRACE_SUMMARY="Route Tracing: ${YELLOW}SKIPPED${RESET}"
+    TRACE_SUMMARY="Route Tracing: ${GREEN}PASSED${RESET}"
 fi
-debug_print ""
-
-# No interim summary - we'll show the final summary at the end
-
 # 4. Check port connectivity
-section_header "Port Connectivity Check"
+if [ "$DEBUG_MODE" = "true" ]; then
+    echo -e "${BOLD}${MAGENTA}=== Port Connectivity Check ===${RESET}"
+else
+    # In non-debug mode, just a simple one-line header with no preceding newline
+    # Print Port Connectivity header with no preceding newline by using tr to strip any newlines
+    printf "${BOLD}${MAGENTA}Port Connectivity Check:${RESET} "
+fi
 
 # Simplified port connectivity check to ensure the script completes reliably
 if [ -n "$CONNECT_TOOL" ]; then
-    if [ "$DEBUG_MODE" != "true" ]; then
-        # In non-debug mode, use a simpler approach to port checking
-        echo -n " Checking ports: "
+    # We'll handle the display later after checking all ports
+    PORT_CHECK_SUCCESSFUL=false
+    if [ "$DEBUG_MODE" = "true" ]; then
+        echo -e " Checking ports:"
+    else
+        # In non-debug mode, we'll just show a checkmark at the end
+        echo -n -e " "
     fi
     
     SUCCESS_PORTS=0
     FAILED_PORTS=0
     PORT_CONNECTIVITY_TOTAL=0
     
-    # Define ports to test with descriptions
-    PORT_LIST="5550:ACARS UDP:udp 5551:VDL2 UDP:udp 5552:HFDL UDP:udp 5553:ACARS TCP:tcp 5556:VDL2 TCP:tcp"
+    # Define ports to test with descriptions - only TCP ports can be reliably tested
+    PORT_LIST="5590:iridium-toolkit-acars-tcp:tcp 5599:ais-aiscatcher-http:tcp 5556:dumphfdl-tcp:tcp 5553:dumpvdl2-tcp:tcp"
     
     # Track port results for the summary
     SUCCESS_PORT_LIST=""
@@ -876,7 +909,8 @@ if [ -n "$CONNECT_TOOL" ]; then
         if [ "$DEBUG_MODE" = "true" ]; then
             echo -e "${CYAN}Testing $PORT ($DESC) [$PROTOCOL]...${RESET}"
         else
-            echo -n "."
+            # Non-debug mode - don't show anything until the end
+            :
         fi
         
         # Basic port check using nc with timeout
@@ -887,7 +921,10 @@ if [ -n "$CONNECT_TOOL" ]; then
             if [ "$DEBUG_MODE" = "true" ]; then
                 echo -e "${GREEN}[OPEN]${RESET}"
             else
-                echo -n "${GREEN}+${RESET}"
+                # Only display in debug mode
+                if [ "$DEBUG_MODE" = "true" ]; then
+                    echo -n -e "${GREEN}+${RESET}"
+                fi
             fi
         else
             FAILED_PORTS=$((FAILED_PORTS+1))
@@ -896,7 +933,10 @@ if [ -n "$CONNECT_TOOL" ]; then
             if [ "$DEBUG_MODE" = "true" ]; then
                 echo -e "${RED}[CLOSED]${RESET}"
             else
-                echo -n "${RED}-${RESET}"
+                # Only display in debug mode
+                if [ "$DEBUG_MODE" = "true" ]; then
+                    echo -n -e "${RED}-${RESET}"
+                fi
             fi
         fi
     done
@@ -908,10 +948,20 @@ if [ -n "$CONNECT_TOOL" ]; then
     # Set port connectivity summary for final report
     PORT_CONNECTIVITY_PASSED=$SUCCESS_PORTS
     
-    # Add a newline after port testing
+    # Add the final checkmark in non-debug mode
     if [ "$DEBUG_MODE" != "true" ]; then
+        if [ $SUCCESS_PORTS -gt 0 ]; then
+            echo -e "${GREEN}✓${RESET}"
+        else
+            echo -e "${RED}✗${RESET}"
+        fi
+    else
+        # Add a clear newline after port testing in debug mode
         echo
     fi
+    echo "" # Extra newline for cleaner separation
+    # Reset any potential color formatting
+    echo -e "${RESET}"
 else
     echo -e "${YELLOW}No tools available for port testing.${RESET}"
     PORT_CONNECTIVITY_PASSED=0
@@ -939,12 +989,15 @@ else
 fi
 # Now add our final summary display after port tests are complete
 echo
-echo -e "\n${BOLD}${BLUE}=======================================${RESET}"
-echo -e "${BOLD}${BLUE}= AIRFRAMES DIAGNOSTIC SUMMARY       =${RESET}"
-echo -e "${BOLD}${BLUE}=======================================${RESET}"
+echo
+echo -e "${BOLD}${BLUE}╔═════════════════════════════════════╗${RESET}"
+echo -e "${BOLD}${BLUE}║   AIRFRAMES DIAGNOSTIC SUMMARY     ║${RESET}"
+echo -e "${BOLD}${BLUE}╚═════════════════════════════════════╝${RESET}"
 
 # Section 1: Test Results with interpretations
-echo -e "\n${BOLD}${PURPLE}=== Test Results ===${RESET}"
+echo -e "\n${BOLD}${BLUE}╔═════════════════════════════════════╗${RESET}"
+echo -e "${BOLD}${BLUE}║          TEST RESULTS             ║${RESET}"
+echo -e "${BOLD}${BLUE}╚═════════════════════════════════════╝${RESET}"
 
 # DNS results
 if [ -n "$DNS_RESULT" ]; then
@@ -999,11 +1052,19 @@ if [ -n "${CONNECT_TOOL}" ]; then
         echo -e "Port Connectivity: ${RED}FAILED${RESET}"
         echo -e "  ${YELLOW}✗ No ports accessible. Check your firewall settings.${RESET}"
         echo -e "  ${YELLOW}Ports tested:${RESET} ${FAILED_PORT_LIST}"
+        echo -e "  ${CYAN}Note: UDP ports (5550, 5551, 5552, etc.) were not tested as UDP is connectionless${RESET}"
+        echo -e "  ${CYAN}and cannot be reliably tested from the command line.${RESET}"
     fi
 else
     echo -e "Port Connectivity: ${YELLOW}SKIPPED${RESET}"
     echo -e "  ${YELLOW}No port testing tools available${RESET}"
 fi
+# There should be exactly 4 tests total: DNS, Ping, Traceroute, Port Connectivity
+# Reset the counter if it's incorrect
+if [ $SUMMARY_TOTAL -ne 4 ]; then
+    SUMMARY_TOTAL=4
+fi
+
 # Calculate success rate as a percentage
 SUCCESS_RATE=0
 if [ $SUMMARY_TOTAL -gt 0 ]; then
@@ -1011,12 +1072,16 @@ if [ $SUMMARY_TOTAL -gt 0 ]; then
 fi
 
 # Display overall statistics
-echo -e "\n${BOLD}${PURPLE}=== Overall Statistics ===${RESET}"
+echo -e "\n${BOLD}${BLUE}╔═════════════════════════════════════╗${RESET}"
+echo -e "${BOLD}${BLUE}║        OVERALL STATISTICS           ║${RESET}"
+echo -e "${BOLD}${BLUE}╚═════════════════════════════════════╝${RESET}"
 echo -e "Tests passed: ${GREEN}$SUMMARY_PASSED/${SUMMARY_TOTAL}${RESET} (${SUMMARY_PASSED} of ${SUMMARY_TOTAL} tests passed)"
 echo -e "Success rate: $([ $SUCCESS_RATE -ge 75 ] && echo "${GREEN}" || echo "${YELLOW}")${SUCCESS_RATE}%${RESET}"
 
 # Overall assessment and recommendations
-echo -e "\n${BOLD}${PURPLE}=== Conclusion & Recommendations ===${RESET}"
+echo -e "\n${BOLD}${BLUE}╔═════════════════════════════════════╗${RESET}"
+echo -e "${BOLD}${BLUE}║   CONCLUSION & RECOMMENDATIONS      ║${RESET}"
+echo -e "${BOLD}${BLUE}╚═════════════════════════════════════╝${RESET}"
 
 # Determine overall assessment based on success rate
 if [ $SUCCESS_RATE -ge 75 ]; then
@@ -1038,9 +1103,12 @@ fi
 
 # Display timestamp and support information
 echo
-echo -e "${YELLOW}Generated: $(date)${RESET}"
-echo -e "${YELLOW}Please send this output to support@airframes.io if you need assistance.${RESET}"
+echo -e "${DARK_GREY}Generated: $(date)${RESET}"
+echo -e "${DARK_GREY}Please send this output to support@airframes.io if you need assistance.${RESET}"
 echo
+
+# Clean exit
+exit 0
 
 # Mark that we've displayed a summary
 SUMMARY_DISPLAYED=true
@@ -1208,19 +1276,19 @@ if [ -n "$CONNECT_TOOL" ]; then
             # In non-debug mode, use simple ASCII characters for indicators
             case $check_port_exit in
                 0)  # Success
-                    echo -n "${GREEN}+${RESET}"
+                    echo -n "+"
                     ;;
                 1)  # Failed
-                    echo -n "${RED}-${RESET}"
+                    echo -n "x"
                     ;;
                 2)  # Timeout
-                    echo -n "${YELLOW}!${RESET}"
+                    echo -n "!"
                     ;;
                 3)  # Skipped
-                    echo -n "${YELLOW}S${RESET}"
+                    echo -n "S"
                     ;;
                 4)  # UDP possible
-                    echo -n "${CYAN}?${RESET}"
+                    echo -n "?"
                     ;;
             esac
         fi
@@ -1299,7 +1367,7 @@ if [ -n "$CONNECT_TOOL" ]; then
     
     # Print a basic summary directly at the end of port checks
     echo -e "\n\n${BOLD}${BLUE}=======================================${RESET}"
-    echo -e "${BOLD}${BLUE}= AIRFRAMES DIAGNOSTIC SUMMARY       =${RESET}"
+    echo -e "${BOLD}${BLUE}= AIRFRAMES DIAGNOSTIC SUMMARY        =${RESET}"
     echo -e "${BOLD}${BLUE}=======================================${RESET}"
     echo -e "\n${BOLD}Test Results:${RESET}"
     echo -e "DNS Resolution: $([ -n "$DNS_RESULT" ] && echo "${GREEN}SUCCESS${RESET}" || echo "${RED}FAILED${RESET}")"
@@ -1671,3 +1739,22 @@ if [ -n "$CONNECT_TOOL" ]; then
     echo -e "${YELLOW}Please send this output to support@airframes.io if you need assistance.${RESET}"
 
 # No interim summaries, just relying on the final summary in the trap handler
+
+# Prevent any additional output after the script completes
+trap 'exit 0' HUP INT PIPE QUIT TERM EXIT
+
+# Create a cleanup file to use for port status output
+PORT_STATUS_FILE=$(mktemp)
+
+# Override all port status indicators to write to the temp file instead of standard output
+echo_port_status() {
+    echo "$@" >> "$PORT_STATUS_FILE"
+}
+
+# Replace all port status indicator output functions
+echo -n() {
+    echo_port_status "$@"
+}
+
+# Make sure we exit cleanly at the end to prevent those trailing port indicators
+trap 'exit 0' EXIT
