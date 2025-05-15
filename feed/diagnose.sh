@@ -3,8 +3,8 @@
 # Airframes Feed Diagnostic Tool v1.0.0
 # This script helps diagnose connectivity issues with Airframes feed services
 #
-# Usage: curl -sSL https://scripts.airframes.sh/diagnose.sh | bash
-#    or: wget -qO- https://scripts.airframes.sh/diagnose.sh | bash
+# Usage: curl -sSL https://scripts.airframes.sh/feed/diagnose.sh | bash
+#    or: wget -qO- https://scripts.airframes.sh/feed/diagnose.sh | bash
 
 # Setup trap to clean up temporary files on exit and handle interrupts gracefully
 # Trap function to ensure we show results even if terminated early
