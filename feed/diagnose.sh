@@ -477,13 +477,14 @@ detect_tools() {
     
     echo
     
-    # Exit if required tools are missing
+    # Return status instead of exiting
     if [ "$MISSING_TOOLS" = "true" ]; then
         echo -e "${RED}ERROR: Critical tools are missing.${RESET}"
         echo -e "${YELLOW}Please install the missing tools listed above before running this script.${RESET}"
         echo -e "${YELLOW}Exiting because required tools are not available.${RESET}"
-        exit 1
+        return 1
     fi
+    return 0
 }
 
 # Color definitions
@@ -537,8 +538,14 @@ always_print "${CYAN}Platform: ${DETECTED_PLATFORM}${RESET}"
 always_print "${CYAN}OS: ${DETECTED_OS} ${DETECTED_VERSION}${RESET}"
 echo
 
-# Detect available tools
+# Detect required tools
 detect_tools
+
+# Check if tools detection failed and exit if it did
+if [ $? -ne 0 ]; then
+    echo -e "${RED}Exiting: Required tools are missing.${RESET}"
+    exit 1
+fi
 
 # Function to print section header
 section_header() {
