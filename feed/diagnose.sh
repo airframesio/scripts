@@ -81,9 +81,9 @@ debug_print() {
     fi
 }
 
-# Function to always print, regardless of debug mode
+# Function to always print, regardless of debug mode, using standardized output format
 always_print() {
-    echo -e "$@"
+    $ECHO_CMD "$@"
 }
 
 # Function to print section success in non-debug mode
@@ -111,7 +111,7 @@ print_section_result() {
     # In non-debug mode, we don't show any output at all
 }
 
-# Color definitions
+# Color definitions - standardized format for cross-platform consistency
 RED="\033[0;31m"
 GREEN="\033[0;32m"
 YELLOW="\033[0;33m"
@@ -122,59 +122,69 @@ DARK_GREY="\033[0;90m" # Dark grey for supporting notices
 BOLD="\033[1m"
 RESET="\033[0m"
 
+# Force color output even on non-interactive terminals for consistency
+export CLICOLOR_FORCE=1
+
+# Ensure consistent output format across platforms
+ECHO_CMD="echo -e"
+if [ "$TERM" = "dumb" ] || [ "$TERM" = "unknown" ]; then
+    # For dumb terminals, we might need to adjust
+    TERM=xterm
+fi
+
 # Function to display a comprehensive test summary at any point
 display_test_summary() {
-    # Display a comprehensive test summary
-    echo -e "${BOLD}${MAGENTA}╔═════════════════════════════════════╗${RESET}"
-    echo -e "${BOLD}${MAGENTA}║    ${BOLD}${GREEN}AIRFRAMES DIAGNOSTIC SUMMARY${RESET}${BOLD}${MAGENTA}     ║${RESET}"
-    echo -e "${BOLD}${MAGENTA}╚═════════════════════════════════════╝${RESET}"
+    # Display a comprehensive test summary with standardized formatting (portable across platforms)
+    $ECHO_CMD "${BOLD}${MAGENTA}+=====================================+${RESET}"
+    $ECHO_CMD "${BOLD}${MAGENTA}|    ${BOLD}${GREEN}AIRFRAMES DIAGNOSTIC SUMMARY${RESET}${BOLD}${MAGENTA}     |${RESET}"
+    $ECHO_CMD "${BOLD}${MAGENTA}+=====================================+${RESET}"
     
     # DNS Summary
     if [ -n "${DNS_SUCCESS+x}" ]; then
         if [ "$DNS_SUCCESS" = "true" ]; then
-            echo -e "DNS: ${GREEN}Resolves to $DNS_ADDRESS${RESET}"
+            $ECHO_CMD "DNS: ${GREEN}Resolves to $DNS_ADDRESS${RESET}"
         else
-            echo -e "DNS: ${RED}Resolution failed${RESET}"
+            $ECHO_CMD "DNS: ${RED}Resolution failed${RESET}"
         fi
     else
-        echo -e "DNS: ${YELLOW}Not tested${RESET}"
+        $ECHO_CMD "DNS: ${YELLOW}Not tested${RESET}"
     fi
     
     # Ping Summary
     if [ -n "${PING_SUCCESS+x}" ]; then
         if [ "$PING_SUCCESS" = "true" ]; then
-            echo -e "Ping: ${GREEN}Successful${RESET}"
+            $ECHO_CMD "Ping: ${GREEN}Successful${RESET}"
         else
-            echo -e "Ping: ${RED}Failed${RESET}"
+            $ECHO_CMD "Ping: ${RED}Failed${RESET}"
         fi
     else
-        echo -e "Ping: ${YELLOW}Not tested${RESET}"
+        $ECHO_CMD "Ping: ${YELLOW}Not tested${RESET}"
     fi
     
     # Port Summary
-    echo -e "$PORT_SUMMARY"
+    $ECHO_CMD "$PORT_SUMMARY"
     
     # Available Ports
     if [ -n "${SUCCESS_PORT_LIST}" ]; then
-        echo -e "Available ports: ${GREEN}${SUCCESS_PORT_LIST}${RESET}"
+        $ECHO_CMD "Available ports: ${GREEN}${SUCCESS_PORT_LIST}${RESET}"
     fi
     
     # Unavailable Ports
     if [ -n "${FAILED_PORT_LIST}" ]; then
-        echo -e "Unavailable ports: ${RED}${FAILED_PORT_LIST}${RESET}"
+        $ECHO_CMD "Unavailable ports: ${RED}${FAILED_PORT_LIST}${RESET}"
     fi
     
     # Overall statistics
-    echo -e "\n${BOLD}${BLUE}Tests Summary:${RESET}"
-    echo -e "${GREEN}Passed:${RESET} $SUMMARY_PASSED"
-    echo -e "${RED}Failed:${RESET} $SUMMARY_FAILED"
+    $ECHO_CMD "\n${BOLD}${BLUE}Tests Summary:${RESET}"
+    $ECHO_CMD "${GREEN}Passed:${RESET} $SUMMARY_PASSED"
+    $ECHO_CMD "${RED}Failed:${RESET} $SUMMARY_FAILED"
     if [ "$SUMMARY_SKIPPED" -gt 0 ]; then
-        echo -e "${YELLOW}Skipped:${RESET} $SUMMARY_SKIPPED"
+        $ECHO_CMD "${YELLOW}Skipped:${RESET} $SUMMARY_SKIPPED"
     fi
-    echo -e "${BOLD}Total:${RESET} $SUMMARY_TOTAL"
+    $ECHO_CMD "${BOLD}Total:${RESET} $SUMMARY_TOTAL"
     
     # Support contact information
-    echo -e "\n${DARK_GREY}Please send this output to support@airframes.io if you need assistance.${RESET}"
+    $ECHO_CMD "\n${DARK_GREY}Please send this output to support@airframes.io if you need assistance.${RESET}"
     
     # Mark that we've displayed the summary
     SUMMARY_DISPLAYED=true
@@ -364,10 +374,10 @@ SUMMARY_SKIPPED=0
 # Detect platform and tools
 detect_platform
 
-# Banner
-echo -e "${BOLD}${MAGENTA}╔═════════════════════════════════════╗${RESET}"
-echo -e "${BOLD}${MAGENTA}║    ${BOLD}${GREEN}AIRFRAMES FEED DIAGNOSTIC TOOL${RESET}${BOLD}${MAGENTA}   ║${RESET}"
-echo -e "${BOLD}${MAGENTA}╚═════════════════════════════════════╝${RESET}"
+# Banner (standardized for cross-platform consistency)
+$ECHO_CMD "${BOLD}${MAGENTA}+=====================================+${RESET}"
+$ECHO_CMD "${BOLD}${MAGENTA}|    ${BOLD}${GREEN}AIRFRAMES FEED DIAGNOSTIC TOOL${RESET}${BOLD}${MAGENTA}   |${RESET}"
+$ECHO_CMD "${BOLD}${MAGENTA}+=====================================+${RESET}"
 always_print "${CYAN}Time: $(date)${RESET}"
 always_print "${CYAN}System: $(uname -a)${RESET}"
 always_print "${CYAN}Platform: ${DETECTED_PLATFORM}${RESET}"
@@ -578,15 +588,19 @@ echo "Testing TCP ports with very short timeouts..."
 # Set a very short timeout for connection attempts
 CONN_TIMEOUT=${CONNECT_TIMEOUT:-1}
 
+# Standardize check/fail symbols for cross-platform consistency
+CHECK_SYMBOL="+" # Simple symbol that works on all platforms 
+FAIL_SYMBOL="-"
+
 # Test each TCP port one by one with strict timeouts
 for port in 5553 5556 5590 5599; do
     # Simple direct port check using timeout and bash /dev/tcp
     if timeout $CONN_TIMEOUT bash -c "echo >/dev/tcp/$TARGET/$port" >/dev/null 2>&1; then
-        echo -e "  ${GREEN}✓ Port $port (${PORT_INFO[$port]})${RESET}"
+        $ECHO_CMD "  ${GREEN}$CHECK_SYMBOL Port $port (${PORT_INFO[$port]})${RESET}"
         PORT_CONNECTIVITY_PASSED=$((PORT_CONNECTIVITY_PASSED + 1))
         SUCCESS_PORT_LIST="$SUCCESS_PORT_LIST $port"
     else
-        echo -e "  ${RED}✗ Port $port (${PORT_INFO[$port]})${RESET}"
+        $ECHO_CMD "  ${RED}$FAIL_SYMBOL Port $port (${PORT_INFO[$port]})${RESET}"
         FAILED_PORT_LIST="$FAILED_PORT_LIST $port"
     fi
     PORT_CONNECTIVITY_TOTAL=$((PORT_CONNECTIVITY_TOTAL + 1))
