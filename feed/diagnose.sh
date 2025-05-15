@@ -516,11 +516,6 @@ PING_COUNT=3
 # Detect platform and tools
 detect_platform
 
-# Check if we're running as root - some commands might need elevated privileges
-if [ "$(id -u)" != "0" ]; then
-    always_print "${DARK_GREY}Note: Some checks may require root privileges. Consider running with sudo."
-fi
-
 # Banner
 echo -e "${BOLD}${MAGENTA}╔═════════════════════════════════════╗${RESET}"
 echo -e "${BOLD}${MAGENTA}║    ${BOLD}${GREEN}AIRFRAMES FEED DIAGNOSTIC TOOL${RESET}${BOLD}${MAGENTA}   ║${RESET}"
